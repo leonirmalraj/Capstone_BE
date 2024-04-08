@@ -23,9 +23,33 @@ const decodeToken = async (token) => {
   return payload;
 };
 
+const validate = async (req, res, next) => {
+  let token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    let payload = await decodeToken(token);
+    let currentTime = +new Date() / 1000;
+
+    if (currentTime < payload.exp) next();
+    else res.status(400).send({ message: "Token Expired" });
+  } else {
+    res.status(400).send({ message: "No Token Found" });
+  }
+};
+
+const adminGaurd = async (req, res, next) => {
+  let token = req.headers.authorization?.split(" ")[1];
+  if (token) {
+    let payload = await decodeToken(token);
+    if (payload.role === "admin") next();
+    else res.status(400).send({ message: "Only Admins are allowed" });
+  } else {
+    res.status(400).send({ message: "No Token Found" });
+  }
+};
 export default {
   hashPassword,
   hashCompare,
   createToken,
-  decodeToken,
+  validate,
+  adminGaurd,
 };

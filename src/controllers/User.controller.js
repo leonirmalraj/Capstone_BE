@@ -160,10 +160,126 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
+/**
+ * Handles the suggestion of a color for a user.
+ * 
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the color value is saved successfully.
+ * @throws {Error} - If there is an internal server error.
+ */
+const suggestColor = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    let user = await userModel.findOne({ _id: userId });
+
+    if (user) {
+      function parseArrayString(arrayString) {
+        try {
+          if (typeof arrayString === "string") {
+            // If arrayString is a string, attempt to parse it
+            return JSON.parse(arrayString.replace(/'/g, '"'));
+          } else if (Array.isArray(arrayString)) {
+            // If arrayString is already an array, return it as is
+            return arrayString;
+          } else {
+            console.error(`Invalid arrayString format: ${arrayString}`);
+            return [];
+          }
+        } catch (error) {
+          console.error(`Error parsing array string: ${arrayString}`);
+          console.error(error);
+          return [];
+        }
+      }
+
+      function getRandomDressColor() {
+        const dressColors = parseArrayString(user.dresscolor);
+        const randomIndex = Math.floor(Math.random() * dressColors.length);
+        return dressColors[randomIndex];
+      }
+
+      async function addValueField() {
+        let selectedColor;
+        let recentColorsArray = parseArrayString(user.recentColors);
+        const dressColors = parseArrayString(user.dresscolor);
+
+        // Try to find a dress color that is not present in recentColorsArray
+        const availableDressColors = dressColors.filter(
+          (color) => !recentColorsArray.includes(color)
+        );
+
+        // Filter out the last three values from recentColorsArray
+        const lastThreeColors = recentColorsArray.slice(-3);
+
+        if (recentColorsArray.length >= 3) {
+          do {
+            // If recentColorsArray has three or more colors, compare with the last three colors
+            if (availableDressColors.length > 0) {
+              // If there are available colors excluding the last three, select one randomly
+              const randomIndex = Math.floor(
+                Math.random() * availableDressColors.length
+              );
+              selectedColor = availableDressColors[randomIndex];
+            } else {
+              // If no available colors excluding the last three, select a random dress color
+              selectedColor = getRandomDressColor();
+            }
+
+            // Check if the selected color matches the last three colors
+          } while (lastThreeColors.includes(selectedColor));
+        } else {
+          // If recentColorsArray has less than three colors, select a color without comparison
+          if (availableDressColors.length > 0) {
+            const randomIndex = Math.floor(
+              Math.random() * availableDressColors.length
+            );
+            selectedColor = availableDressColors[randomIndex];
+          } else {
+            selectedColor = getRandomDressColor();
+          }
+        }
+
+        user.value = selectedColor;
+
+        recentColorsArray.push(selectedColor);
+
+        if (recentColorsArray.length > 7) {
+          recentColorsArray.shift();
+        }
+
+        user.recentColors = recentColorsArray;
+
+        await user.save();
+
+        return selectedColor;
+      }
+
+
+      const selectedColor = await addValueField();
+      res
+        .status(200)
+        .send({
+          message: "Color value saved successfully",
+          selectedColor,
+          user,
+        });
+    } else {
+      res.status(404).send({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
 
 export default {
   signupController,
   signinController,
   resetPassword,
   forgotPassword,
+  suggestColor
 };
