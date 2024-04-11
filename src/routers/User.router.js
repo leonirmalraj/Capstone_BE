@@ -7,8 +7,12 @@ const router = express.Router();
 
 router.post("/signup", validators.validate("signup"), validators.validationMiddleware, UserController.signupController);
 router.post("/signin", validators.validate("signin"), validators.validationMiddleware, UserController.signinController);
+router.get("/signin/:id", Auth.validate, UserController.getUserById);
+router.put("/signin/:id", Auth.validate, UserController.addUserdetailsById);
+
 router.post("/forgot-password", validators.validate("forgotPassWord"), validators.validationMiddleware, UserController.forgotPassword);
 router.post("/reset-password", validators.validate("resetPassWord"), validators.validationMiddleware, UserController.resetPassword);
-router.put("/suggestcolor/:id", Auth.validate, UserController.suggestColor);
+router.put("/suggest-color/:id", Auth.validate, UserController.suggestColor);
+router.put("/suggest-watch-color/:id", Auth.validate, UserController.suggestWatchColor);
 
 export default router

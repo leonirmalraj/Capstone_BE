@@ -5,6 +5,27 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+/**
+ * Fetches a user by their ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the user is fetched successfully or rejects with an error.
+ */
+const getUserById = async (req, res) => {
+  try {
+    let user = await userModel.findOne({ _id: req.params.id });
+    res.status(200).send({
+      message: "User Fetched Successfully",
+      user,
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 const signupController = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
@@ -61,10 +82,9 @@ const signinController = async (req, res) => {
       email: user.email,
       role: user.role,
     }, '15d'); // Example: Token expires in 15 days
-
     let userData = await userModel.findOne(
       { email: req.body.email },
-      { _id: 0, password: 0, status: 0, createdAt: 0, email: 0 }
+      {  password: 0, status: 0, createdAt: 0, email: 0 }
     );
 
     res.status(200).json({ message: "Signin successful", token, userData });
@@ -160,27 +180,20 @@ const resetPassword = async (req, res) => {
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
-/**
- * Handles the suggestion of a color for a user.
- * 
- * @param {Object} req - The request object.
- * @param {Object} res - The response object.
- * @returns {Promise<void>} - A promise that resolves when the color value is saved successfully.
- * @throws {Error} - If there is an internal server error.
- */
+
 const suggestColor = async (req, res) => {
   try {
     const userId = req.params.id;
+    // Assuming userModel is imported and correctly defined
     let user = await userModel.findOne({ _id: userId });
 
     if (user) {
-      function parseArrayString(arrayString) {
+      // Define parseArrayString and getRandomDressColor functions outside to improve readability
+      const parseArrayString = (arrayString) => {
         try {
           if (typeof arrayString === "string") {
-            // If arrayString is a string, attempt to parse it
             return JSON.parse(arrayString.replace(/'/g, '"'));
           } else if (Array.isArray(arrayString)) {
-            // If arrayString is already an array, return it as is
             return arrayString;
           } else {
             console.error(`Invalid arrayString format: ${arrayString}`);
@@ -191,53 +204,33 @@ const suggestColor = async (req, res) => {
           console.error(error);
           return [];
         }
-      }
+      };
 
-      function getRandomDressColor() {
+      const getRandomDressColor = () => {
         const dressColors = parseArrayString(user.dresscolor);
         const randomIndex = Math.floor(Math.random() * dressColors.length);
         return dressColors[randomIndex];
-      }
+      };
 
-      async function addValueField() {
+      const addValueField = async () => {
         let selectedColor;
         let recentColorsArray = parseArrayString(user.recentColors);
         const dressColors = parseArrayString(user.dresscolor);
 
-        // Try to find a dress color that is not present in recentColorsArray
         const availableDressColors = dressColors.filter(
           (color) => !recentColorsArray.includes(color)
         );
 
-        // Filter out the last three values from recentColorsArray
         const lastThreeColors = recentColorsArray.slice(-3);
 
-        if (recentColorsArray.length >= 3) {
-          do {
-            // If recentColorsArray has three or more colors, compare with the last three colors
-            if (availableDressColors.length > 0) {
-              // If there are available colors excluding the last three, select one randomly
-              const randomIndex = Math.floor(
-                Math.random() * availableDressColors.length
-              );
-              selectedColor = availableDressColors[randomIndex];
-            } else {
-              // If no available colors excluding the last three, select a random dress color
-              selectedColor = getRandomDressColor();
-            }
-
-            // Check if the selected color matches the last three colors
-          } while (lastThreeColors.includes(selectedColor));
+        // Simplify the logic for selecting a color
+        if (recentColorsArray.length >= 3 && availableDressColors.length > 0) {
+          // If recentColorsArray has three or more colors and available colors, select randomly from available
+          const randomIndex = Math.floor(Math.random() * availableDressColors.length);
+          selectedColor = availableDressColors[randomIndex];
         } else {
-          // If recentColorsArray has less than three colors, select a color without comparison
-          if (availableDressColors.length > 0) {
-            const randomIndex = Math.floor(
-              Math.random() * availableDressColors.length
-            );
-            selectedColor = availableDressColors[randomIndex];
-          } else {
-            selectedColor = getRandomDressColor();
-          }
+          // If recentColorsArray has less than three colors or no available colors, select randomly from dressColors
+          selectedColor = getRandomDressColor();
         }
 
         user.value = selectedColor;
@@ -253,17 +246,89 @@ const suggestColor = async (req, res) => {
         await user.save();
 
         return selectedColor;
-      }
-
+      };
 
       const selectedColor = await addValueField();
-      res
-        .status(200)
-        .send({
-          message: "Color value saved successfully",
-          selectedColor,
-          user,
-        });
+      res.status(200).send({
+        message: "Color value saved successfully",
+        selectedColor,
+        user,
+      });
+    } else {
+      res.status(404).send({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+const suggestWatchColor = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await userModel.findOne({ _id: userId });
+
+    if (user) {
+      const parseArrayString = (arrayString) => {
+        try {
+          if (typeof arrayString === "string") {
+            return JSON.parse(arrayString.replace(/'/g, '"'));
+          } else if (Array.isArray(arrayString)) {
+            return arrayString;
+          } else {
+            console.error(`Invalid arrayString format: ${arrayString}`);
+            return [];
+          }
+        } catch (error) {
+          console.error(`Error parsing array string: ${arrayString}`);
+          console.error(error);
+          return [];
+        }
+      };
+
+      const getRandomWatchColor = () => {
+        const watchColors = parseArrayString(user.watchColor);
+        const randomIndex = Math.floor(Math.random() * watchColors.length);
+        return watchColors[randomIndex];
+      };
+
+      const addValueField = async () => {
+        let selectedWatchColor;
+        let recentWatchColorsArray = parseArrayString(user.recentWatchColors);
+        const watchColors = parseArrayString(user.watchcolor);
+
+        const availableWatchColors = watchColors.filter(
+          (color) => !recentWatchColorsArray.includes(color)
+        );
+
+        if (availableWatchColors.length > 0) {
+          selectedWatchColor = availableWatchColors[Math.floor(Math.random() * availableWatchColors.length)];
+        } else {
+          selectedWatchColor = getRandomWatchColor();
+        }
+
+        // Update recent watch colors
+        recentWatchColorsArray.unshift(selectedWatchColor);
+        if (recentWatchColorsArray.length > 7) {
+          recentWatchColorsArray.pop();
+        }
+
+        user.recentWatchColors = recentWatchColorsArray; // Update the user document with recent watch colors
+
+        await user.save(); // Save the updated user document
+
+        return selectedWatchColor;
+      };
+
+
+      const selectedWatchColor = await addValueField();
+      res.status(200).send({
+        message: "Watch color value saved successfully",
+        selectedWatchColor,
+        user,
+      });
     } else {
       res.status(404).send({ message: "User not found" });
     }
@@ -276,10 +341,38 @@ const suggestColor = async (req, res) => {
   }
 };
 
+
+const addUserdetailsById = async (req, res) => {
+  try {
+    let user = await userModel.findOne({ _id: req.params.id });
+    if (user) {
+      await userModel.updateOne(
+        { _id: req.params.id },
+        {
+          $set: req.body,
+        }
+      );
+      res.status(200).send({
+        message: "User Details added",
+      });
+    } else {
+      res.status(400).send({ message: "Invalid User" });
+    }
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
 export default {
   signupController,
   signinController,
+  getUserById,
   resetPassword,
-  forgotPassword,
-  suggestColor
+  forgotPassword,  
+  addUserdetailsById,
+  suggestColor,
+  suggestWatchColor
 };
