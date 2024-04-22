@@ -135,7 +135,7 @@ const forgotPassword = async (req, res) => {
         <p>Dear ${user.firstName} ${user.lastName},</p>
         <p>We received a request to reset your password. Here is your One-Time Password (OTP): <strong>${OTP}</strong></p>
         <p>Please click the following link to reset your password:</p>
-        <a href="http://localhost:5173/reset-password">Reset Password</a>
+        <a href="https://main--tubular-lokum-952508.netlify.app/reset-password">Reset Password</a>
         <p>If you did not make this request, please ignore this email.</p>
         <p>Thank you</p>
         <p>From Validation</p>
@@ -181,7 +181,7 @@ const resetPassword = async (req, res) => {
   }
 };
 
-const suggestColor = async (req, res) => {
+const suggestShirtColor = async (req, res) => {
   try {
     const userId = req.params.id;
     // Assuming userModel is imported and correctly defined
@@ -207,41 +207,41 @@ const suggestColor = async (req, res) => {
       };
 
       const getRandomDressColor = () => {
-        const dressColors = parseArrayString(user.dresscolor);
+        const dressColors = parseArrayString(user.shirtColors);
         const randomIndex = Math.floor(Math.random() * dressColors.length);
         return dressColors[randomIndex];
       };
 
       const addValueField = async () => {
         let selectedColor;
-        let recentColorsArray = parseArrayString(user.recentColors);
-        const dressColors = parseArrayString(user.dresscolor);
+        let recentShirtColorsArray = parseArrayString(user.recentShirtColors);
+        const dressColors = parseArrayString(user.shirtColors);
 
         const availableDressColors = dressColors.filter(
-          (color) => !recentColorsArray.includes(color)
+          (color) => !recentShirtColorsArray.includes(color)
         );
 
-        const lastThreeColors = recentColorsArray.slice(-3);
+        const lastThreeColors = recentShirtColorsArray.slice(-3);
 
         // Simplify the logic for selecting a color
-        if (recentColorsArray.length >= 3 && availableDressColors.length > 0) {
-          // If recentColorsArray has three or more colors and available colors, select randomly from available
+        if (recentShirtColorsArray.length >= 3 && availableDressColors.length > 0) {
+          // If recentShirtColorsArray has three or more colors and available colors, select randomly from available
           const randomIndex = Math.floor(Math.random() * availableDressColors.length);
           selectedColor = availableDressColors[randomIndex];
         } else {
-          // If recentColorsArray has less than three colors or no available colors, select randomly from dressColors
+          // If recentShirtColorsArray has less than three colors or no available colors, select randomly from dressColors
           selectedColor = getRandomDressColor();
         }
 
         user.value = selectedColor;
 
-        recentColorsArray.push(selectedColor);
+        recentShirtColorsArray.push(selectedColor);
 
-        if (recentColorsArray.length > 7) {
-          recentColorsArray.shift();
+        if (recentShirtColorsArray.length > 7) {
+          recentShirtColorsArray.shift();
         }
 
-        user.recentColors = recentColorsArray;
+        user.recentShirtColors = recentShirtColorsArray;
 
         await user.save();
 
@@ -265,12 +265,14 @@ const suggestColor = async (req, res) => {
     });
   }
 };
-const suggestWatchColor = async (req, res) => {
+const suggestPantColor = async (req, res) => {
   try {
     const userId = req.params.id;
-    const user = await userModel.findOne({ _id: userId });
+    // Assuming userModel is imported and correctly defined
+    let user = await userModel.findOne({ _id: userId });
 
     if (user) {
+      // Define parseArrayString and getRandomWatchColor functions outside to improve readability
       const parseArrayString = (arrayString) => {
         try {
           if (typeof arrayString === "string") {
@@ -289,44 +291,51 @@ const suggestWatchColor = async (req, res) => {
       };
 
       const getRandomWatchColor = () => {
-        const watchColors = parseArrayString(user.watchColor);
-        const randomIndex = Math.floor(Math.random() * watchColors.length);
-        return watchColors[randomIndex];
+        const dressColors = parseArrayString(user.pantColors);
+        const randomIndex = Math.floor(Math.random() * dressColors.length);
+        return dressColors[randomIndex];
       };
 
       const addValueField = async () => {
-        let selectedWatchColor;
-        let recentWatchColorsArray = parseArrayString(user.recentWatchColors);
-        const watchColors = parseArrayString(user.watchcolor);
+        let selectedColor;
+        let recentPantColorsArray = parseArrayString(user.recentPantColors);
+        const dressColors = parseArrayString(user.pantColors);
 
-        const availableWatchColors = watchColors.filter(
-          (color) => !recentWatchColorsArray.includes(color)
+        const availableDressColors = dressColors.filter(
+          (color) => !recentPantColorsArray.includes(color)
         );
 
-        if (availableWatchColors.length > 0) {
-          selectedWatchColor = availableWatchColors[Math.floor(Math.random() * availableWatchColors.length)];
+        const lastThreeColors = recentPantColorsArray.slice(-3);
+
+        // Simplify the logic for selecting a color
+        if (recentPantColorsArray.length >= 3 && availableDressColors.length > 0) {
+          // If recentPantColorsArray has three or more colors and available colors, select randomly from available
+          const randomIndex = Math.floor(Math.random() * availableDressColors.length);
+          selectedColor = availableDressColors[randomIndex];
         } else {
-          selectedWatchColor = getRandomWatchColor();
+          // If recentPantColorsArray has less than three colors or no available colors, select randomly from dressColors
+          selectedColor = getRandomWatchColor();
         }
 
-        // Update recent watch colors
-        recentWatchColorsArray.unshift(selectedWatchColor);
-        if (recentWatchColorsArray.length > 7) {
-          recentWatchColorsArray.pop();
+        user.value = selectedColor;
+
+        recentPantColorsArray.push(selectedColor);
+
+        if (recentPantColorsArray.length > 7) {
+          recentPantColorsArray.shift();
         }
 
-        user.recentWatchColors = recentWatchColorsArray; // Update the user document with recent watch colors
+        user.recentPantColors = recentPantColorsArray;
 
-        await user.save(); // Save the updated user document
+        await user.save();
 
-        return selectedWatchColor;
+        return selectedColor;
       };
 
-
-      const selectedWatchColor = await addValueField();
+      const selectedColor = await addValueField();
       res.status(200).send({
-        message: "Watch color value saved successfully",
-        selectedWatchColor,
+        message: "Color value saved successfully",
+        selectedColor,
         user,
       });
     } else {
@@ -341,80 +350,80 @@ const suggestWatchColor = async (req, res) => {
   }
 };
 
-const suggestBagColor = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await userModel.findOne({ _id: userId });
+// const suggestBagColor = async (req, res) => {
+//   try {
+//     const userId = req.params.id;
+//     const user = await userModel.findOne({ _id: userId });
 
-    if (user) {
-      const parseArrayString = (arrayString) => {
-        try {
-          if (typeof arrayString === "string") {
-            return JSON.parse(arrayString.replace(/'/g, '"'));
-          } else if (Array.isArray(arrayString)) {
-            return arrayString;
-          } else {
-            console.error(`Invalid arrayString format: ${arrayString}`);
-            return [];
-          }
-        } catch (error) {
-          console.error(`Error parsing array string: ${arrayString}`);
-          console.error(error);
-          return [];
-        }
-      };
+//     if (user) {
+//       const parseArrayString = (arrayString) => {
+//         try {
+//           if (typeof arrayString === "string") {
+//             return JSON.parse(arrayString.replace(/'/g, '"'));
+//           } else if (Array.isArray(arrayString)) {
+//             return arrayString;
+//           } else {
+//             console.error(`Invalid arrayString format: ${arrayString}`);
+//             return [];
+//           }
+//         } catch (error) {
+//           console.error(`Error parsing array string: ${arrayString}`);
+//           console.error(error);
+//           return [];
+//         }
+//       };
 
-      const getRandomBagColor = () => {
-        const bagColors = parseArrayString(user.bagColor);
-        const randomIndex = Math.floor(Math.random() * bagColors.length);
-        return bagColors[randomIndex];
-      };
+//       const getRandomBagColor = () => {
+//         const bagColors = parseArrayString(user.bagColor);
+//         const randomIndex = Math.floor(Math.random() * bagColors.length);
+//         return bagColors[randomIndex];
+//       };
 
-      const addValueField = async () => {
-        let selectedBagColor;
-        let recentBagColorsArray = parseArrayString(user.recentBagColors);
-        const bagColors = parseArrayString(user.bagcolor);
+//       const addValueField = async () => {
+//         let selectedBagColor;
+//         let recentBagColorsArray = parseArrayString(user.recentBagColors);
+//         const bagColors = parseArrayString(user.bagcolor);
 
-        const availableBagColors = bagColors.filter(
-          (color) => !recentBagColorsArray.includes(color)
-        );
+//         const availableBagColors = bagColors.filter(
+//           (color) => !recentBagColorsArray.includes(color)
+//         );
 
-        if (availableBagColors.length > 0) {
-          selectedBagColor = availableBagColors[Math.floor(Math.random() * availableBagColors.length)];
-        } else {
-          selectedBagColor = getRandomBagColor();
-        }
+//         if (availableBagColors.length > 0) {
+//           selectedBagColor = availableBagColors[Math.floor(Math.random() * availableBagColors.length)];
+//         } else {
+//           selectedBagColor = getRandomBagColor();
+//         }
 
-        // Update recent bag colors
-        recentBagColorsArray.unshift(selectedBagColor);
-        if (recentBagColorsArray.length > 7) {
-          recentBagColorsArray.pop();
-        }
+//         // Update recent bag colors
+//         recentBagColorsArray.unshift(selectedBagColor);
+//         if (recentBagColorsArray.length > 7) {
+//           recentBagColorsArray.pop();
+//         }
 
-        user.recentBagColors = recentBagColorsArray; // Update the user document with recent bag colors
+//         user.recentBagColors = recentBagColorsArray; // Update the user document with recent bag colors
 
-        await user.save(); // Save the updated user document
+//         await user.save(); // Save the updated user document
 
-        return selectedBagColor;
-      };
+//         return selectedBagColor;
+//       };
 
-      const selectedBagColor = await addValueField();
-      res.status(200).send({
-        message: "Bag color value saved successfully",
-        selectedBagColor,
-        user,
-      });
-    } else {
-      res.status(404).send({ message: "User not found" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
+//       const selectedBagColor = await addValueField();
+//       res.status(200).send({
+//         message: "Bag color value saved successfully",
+//         selectedBagColor,
+//         user,
+//       });
+//     } else {
+//       res.status(404).send({ message: "User not found" });
+//     }
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).send({
+//       message: "Internal Server Error",
+//       error: error.message,
+//     });
+//   }
+// };
 
 
 const suggestShoeColor = async (req, res) => {
@@ -439,9 +448,9 @@ const suggestShoeColor = async (req, res) => {
           return [];
         }
       };
-
+      
       const getRandomShoeColor = () => {
-        const shoeColors = parseArrayString(user.shoeColor);
+        const shoeColors = parseArrayString(user.shoeColors);
         const randomIndex = Math.floor(Math.random() * shoeColors.length);
         return shoeColors[randomIndex];
       };
@@ -532,9 +541,8 @@ export default {
   resetPassword,
   forgotPassword,  
   addUserdetailsById,
-  suggestColor,
-  suggestWatchColor,
-  suggestBagColor,
+  suggestShirtColor,
+  suggestPantColor,
   suggestShoeColor
 
 };
