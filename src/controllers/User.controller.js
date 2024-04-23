@@ -25,6 +25,116 @@ const getUserById = async (req, res) => {
     });
   }
 };
+/**
+ * Fetches a user by their ID.
+ * @param {Object} req - The request object.
+ * @param {Object} res - The response object.
+ * @returns {Promise<void>} - A promise that resolves when the user is fetched successfully or rejects with an error.
+ */
+const getUserFetchById = async (req, res) => {
+  try {
+    let user = await userModel.findOne(
+      { _id: req.params.id }, // Query criteria
+      { firstName: 1, lastName: 1, email: 1 } // Projection: Include only these fields
+    );
+    if (!user) {
+      return res.status(404).send({
+        message: "User not found",
+      });
+    }
+    res.status(200).send({
+      message: "User fetched successfully",
+      user: {
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+      },
+    });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+const userUpadatedById = async (req, res) => {
+  const userId = req.params.id; // Extract user ID from request params
+  const userData = req.body; // Extract updated user data from request body
+
+  try {
+    // Find user by ID and update their profile data
+    const updatedUser = await userModel.findByIdAndUpdate(userId, userData, { new: true });
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.status(201).json({ message: 'User profile updated successfully' });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
+const userPasswordUpadatedById = async (req, res) => {
+  const userId = req.params.id;  
+  const { currentPassword, newPassword } = req.body;
+
+  try {
+    // Fetch user from database
+    const user = await userModel.findById(userId);
+
+    // Check if user exists
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if current password is correct
+    const isPasswordCorrect = await auth.hashCompare(currentPassword, user.password);
+    if (!isPasswordCorrect) {
+      return res.status(401).json({ message: 'Incorrect current password' });
+    }
+
+    // Hash the new password
+    const hashedPassword = await auth.hashPassword(newPassword, 10);
+
+    // Update user's password
+    user.password = hashedPassword;
+    await user.save();
+
+    res.status(200).json({ message: 'Password updated successfully' });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+const deleteUserAccount = async (req, res) => {
+  const userId = req.params.id;
+
+  try {
+    // Find the user by userId
+    const user = await userModel.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found." });
+    }
+
+    // Perform the deletion
+    await userModel.deleteOne({ _id: userId });
+
+    res.status(200).json({ message: "User account deleted successfully." });
+  } catch (error) {
+    res.status(500).send({
+      message: "Internal Server Error",
+      error: error.message,
+    });  }
+};
 
 const signupController = async (req, res) => {
   try {
@@ -538,6 +648,10 @@ export default {
   signupController,
   signinController,
   getUserById,
+  getUserFetchById,
+  userUpadatedById,
+  userPasswordUpadatedById,
+  deleteUserAccount,
   resetPassword,
   forgotPassword,  
   addUserdetailsById,
