@@ -80,7 +80,7 @@ const userUpadatedById = async (req, res) => {
 
 
 const userPasswordUpadatedById = async (req, res) => {
-  const userId = req.params.id;  
+  const userId = req.params.id;
   const { currentPassword, newPassword } = req.body;
 
   try {
@@ -133,13 +133,14 @@ const deleteUserAccount = async (req, res) => {
     res.status(500).send({
       message: "Internal Server Error",
       error: error.message,
-    });  }
+    });
+  }
 };
 
 const signupController = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    console.log(firstName,lastName,email,password);
+    console.log(firstName, lastName, email, password);
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -194,7 +195,7 @@ const signinController = async (req, res) => {
     }, '15d'); // Example: Token expires in 15 days
     let userData = await userModel.findOne(
       { email: req.body.email },
-      {  password: 0, status: 0, createdAt: 0, email: 0 }
+      { password: 0, status: 0, createdAt: 0, email: 0 }
     );
 
     res.status(200).json({ message: "Signin successful", token, userData });
@@ -232,10 +233,10 @@ const forgotPassword = async (req, res) => {
       auth: {
         user: process.env.USER_MAILER,
         pass: process.env.PASS_MAILER
-        
+
       },
     });
-    
+
 
     const mailOptions = {
       from: "eyegamers1234@gmail.com",
@@ -291,333 +292,6 @@ const resetPassword = async (req, res) => {
   }
 };
 
-const suggestShirtColor = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    // Assuming userModel is imported and correctly defined
-    let user = await userModel.findOne({ _id: userId });
-
-    if (user) {
-      // Define parseArrayString and getRandomDressColor functions outside to improve readability
-      const parseArrayString = (arrayString) => {
-        try {
-          if (typeof arrayString === "string") {
-            return JSON.parse(arrayString.replace(/'/g, '"'));
-          } else if (Array.isArray(arrayString)) {
-            return arrayString;
-          } else {
-            console.error(`Invalid arrayString format: ${arrayString}`);
-            return [];
-          }
-        } catch (error) {
-          console.error(`Error parsing array string: ${arrayString}`);
-          console.error(error);
-          return [];
-        }
-      };
-
-      const getRandomDressColor = () => {
-        const dressColors = parseArrayString(user.shirtColors);
-        const randomIndex = Math.floor(Math.random() * dressColors.length);
-        return dressColors[randomIndex];
-      };
-
-      const addValueField = async () => {
-        let selectedColor;
-        let recentShirtColorsArray = parseArrayString(user.recentShirtColors);
-        const dressColors = parseArrayString(user.shirtColors);
-
-        const availableDressColors = dressColors.filter(
-          (color) => !recentShirtColorsArray.includes(color)
-        );
-
-        const lastThreeColors = recentShirtColorsArray.slice(-3);
-
-        // Simplify the logic for selecting a color
-        if (recentShirtColorsArray.length >= 3 && availableDressColors.length > 0) {
-          // If recentShirtColorsArray has three or more colors and available colors, select randomly from available
-          const randomIndex = Math.floor(Math.random() * availableDressColors.length);
-          selectedColor = availableDressColors[randomIndex];
-        } else {
-          // If recentShirtColorsArray has less than three colors or no available colors, select randomly from dressColors
-          selectedColor = getRandomDressColor();
-        }
-
-        user.value = selectedColor;
-
-        recentShirtColorsArray.push(selectedColor);
-
-        if (recentShirtColorsArray.length > 7) {
-          recentShirtColorsArray.shift();
-        }
-
-        user.recentShirtColors = recentShirtColorsArray;
-
-        await user.save();
-
-        return selectedColor;
-      };
-
-      const selectedColor = await addValueField();
-      res.status(200).send({
-        message: "Color value saved successfully",
-        selectedColor,
-        user,
-      });
-    } else {
-      res.status(404).send({ message: "User not found" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
-const suggestPantColor = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    // Assuming userModel is imported and correctly defined
-    let user = await userModel.findOne({ _id: userId });
-
-    if (user) {
-      // Define parseArrayString and getRandomWatchColor functions outside to improve readability
-      const parseArrayString = (arrayString) => {
-        try {
-          if (typeof arrayString === "string") {
-            return JSON.parse(arrayString.replace(/'/g, '"'));
-          } else if (Array.isArray(arrayString)) {
-            return arrayString;
-          } else {
-            console.error(`Invalid arrayString format: ${arrayString}`);
-            return [];
-          }
-        } catch (error) {
-          console.error(`Error parsing array string: ${arrayString}`);
-          console.error(error);
-          return [];
-        }
-      };
-
-      const getRandomWatchColor = () => {
-        const dressColors = parseArrayString(user.pantColors);
-        const randomIndex = Math.floor(Math.random() * dressColors.length);
-        return dressColors[randomIndex];
-      };
-
-      const addValueField = async () => {
-        let selectedColor;
-        let recentPantColorsArray = parseArrayString(user.recentPantColors);
-        const dressColors = parseArrayString(user.pantColors);
-
-        const availableDressColors = dressColors.filter(
-          (color) => !recentPantColorsArray.includes(color)
-        );
-
-        const lastThreeColors = recentPantColorsArray.slice(-3);
-
-        // Simplify the logic for selecting a color
-        if (recentPantColorsArray.length >= 3 && availableDressColors.length > 0) {
-          // If recentPantColorsArray has three or more colors and available colors, select randomly from available
-          const randomIndex = Math.floor(Math.random() * availableDressColors.length);
-          selectedColor = availableDressColors[randomIndex];
-        } else {
-          // If recentPantColorsArray has less than three colors or no available colors, select randomly from dressColors
-          selectedColor = getRandomWatchColor();
-        }
-
-        user.value = selectedColor;
-
-        recentPantColorsArray.push(selectedColor);
-
-        if (recentPantColorsArray.length > 7) {
-          recentPantColorsArray.shift();
-        }
-
-        user.recentPantColors = recentPantColorsArray;
-
-        await user.save();
-
-        return selectedColor;
-      };
-
-      const selectedColor = await addValueField();
-      res.status(200).send({
-        message: "Color value saved successfully",
-        selectedColor,
-        user,
-      });
-    } else {
-      res.status(404).send({ message: "User not found" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
-
-// const suggestBagColor = async (req, res) => {
-//   try {
-//     const userId = req.params.id;
-//     const user = await userModel.findOne({ _id: userId });
-
-//     if (user) {
-//       const parseArrayString = (arrayString) => {
-//         try {
-//           if (typeof arrayString === "string") {
-//             return JSON.parse(arrayString.replace(/'/g, '"'));
-//           } else if (Array.isArray(arrayString)) {
-//             return arrayString;
-//           } else {
-//             console.error(`Invalid arrayString format: ${arrayString}`);
-//             return [];
-//           }
-//         } catch (error) {
-//           console.error(`Error parsing array string: ${arrayString}`);
-//           console.error(error);
-//           return [];
-//         }
-//       };
-
-//       const getRandomBagColor = () => {
-//         const bagColors = parseArrayString(user.bagColor);
-//         const randomIndex = Math.floor(Math.random() * bagColors.length);
-//         return bagColors[randomIndex];
-//       };
-
-//       const addValueField = async () => {
-//         let selectedBagColor;
-//         let recentBagColorsArray = parseArrayString(user.recentBagColors);
-//         const bagColors = parseArrayString(user.bagcolor);
-
-//         const availableBagColors = bagColors.filter(
-//           (color) => !recentBagColorsArray.includes(color)
-//         );
-
-//         if (availableBagColors.length > 0) {
-//           selectedBagColor = availableBagColors[Math.floor(Math.random() * availableBagColors.length)];
-//         } else {
-//           selectedBagColor = getRandomBagColor();
-//         }
-
-//         // Update recent bag colors
-//         recentBagColorsArray.unshift(selectedBagColor);
-//         if (recentBagColorsArray.length > 7) {
-//           recentBagColorsArray.pop();
-//         }
-
-//         user.recentBagColors = recentBagColorsArray; // Update the user document with recent bag colors
-
-//         await user.save(); // Save the updated user document
-
-//         return selectedBagColor;
-//       };
-
-//       const selectedBagColor = await addValueField();
-//       res.status(200).send({
-//         message: "Bag color value saved successfully",
-//         selectedBagColor,
-//         user,
-//       });
-//     } else {
-//       res.status(404).send({ message: "User not found" });
-//     }
-//   } catch (error) {
-//     console.error(error);
-//     res.status(500).send({
-//       message: "Internal Server Error",
-//       error: error.message,
-//     });
-//   }
-// };
-
-
-const suggestShoeColor = async (req, res) => {
-  try {
-    const userId = req.params.id;
-    const user = await userModel.findOne({ _id: userId });
-
-    if (user) {
-      const parseArrayString = (arrayString) => {
-        try {
-          if (typeof arrayString === "string") {
-            return JSON.parse(arrayString.replace(/'/g, '"'));
-          } else if (Array.isArray(arrayString)) {
-            return arrayString;
-          } else {
-            console.error(`Invalid arrayString format: ${arrayString}`);
-            return [];
-          }
-        } catch (error) {
-          console.error(`Error parsing array string: ${arrayString}`);
-          console.error(error);
-          return [];
-        }
-      };
-      
-      const getRandomShoeColor = () => {
-        const shoeColors = parseArrayString(user.shoeColors);
-        const randomIndex = Math.floor(Math.random() * shoeColors.length);
-        return shoeColors[randomIndex];
-      };
-
-      const addValueField = async () => {
-        let selectedShoeColor;
-        let recentShoeColorsArray = parseArrayString(user.recentShoeColors);
-        const shoeColors = parseArrayString(user.shoecolor);
-
-        const availableShoeColors = shoeColors.filter(
-          (color) => !recentShoeColorsArray.includes(color)
-        );
-
-        if (availableShoeColors.length > 0) {
-          selectedShoeColor = availableShoeColors[Math.floor(Math.random() * availableShoeColors.length)];
-        } else {
-          selectedShoeColor = getRandomShoeColor();
-        }
-
-        // Update recent shoe colors
-        recentShoeColorsArray.unshift(selectedShoeColor);
-        if (recentShoeColorsArray.length > 7) {
-          recentShoeColorsArray.pop();
-        }
-
-        user.recentShoeColors = recentShoeColorsArray; // Update the user document with recent shoe colors
-
-        await user.save(); // Save the updated user document
-
-        return selectedShoeColor;
-      };
-
-      const selectedShoeColor = await addValueField();
-      res.status(200).send({
-        message: "Shoe color value saved successfully",
-        selectedShoeColor,
-        user,
-      });
-    } else {
-      res.status(404).send({ message: "User not found" });
-    }
-  } catch (error) {
-    console.error(error);
-    res.status(500).send({
-      message: "Internal Server Error",
-      error: error.message,
-    });
-  }
-};
-
-
-
-
-
-
-
-
 
 
 const addUserdetailsById = async (req, res) => {
@@ -644,6 +318,86 @@ const addUserdetailsById = async (req, res) => {
   }
 };
 
+const suggestColors = async (req, res) => {
+  try {
+    const userId = req.params.id;
+    const user = await userModel.findOne({ _id: userId });
+
+    if (user) {
+      const parseArrayString = (arrayString) => {
+        try {
+          if (typeof arrayString === "string") {
+            return JSON.parse(arrayString.replace(/'/g, '"'));
+          } else if (Array.isArray(arrayString)) {
+            return arrayString;
+          } else {
+            console.error(`Invalid arrayString format: ${arrayString}`);
+            return [];
+          }
+        } catch (error) {
+          console.error(`Error parsing array string: ${arrayString}`);
+          console.error(error);
+          return [];
+        }
+      };
+
+      const getRandomColor = (colors) => {
+        const parsedColors = parseArrayString(colors);
+        const randomIndex = Math.floor(Math.random() * parsedColors.length);
+        return parsedColors[randomIndex];
+      };
+
+      const addValueFieldAndUpdateRecentColors = async (colorsKey, recentColorsKey) => {
+        let selectedColor;
+        let recentColorsArray = parseArrayString(user[recentColorsKey]);
+        const availableColors = parseArrayString(user[colorsKey]).filter(
+          (color) => !recentColorsArray.includes(color)
+        );
+
+        if (recentColorsArray.length >= 3 && availableColors.length > 0) {
+          selectedColor = availableColors[Math.floor(Math.random() * availableColors.length)];
+        } else {
+          selectedColor = getRandomColor(user[colorsKey]);
+        }
+
+        user.value = selectedColor;
+
+        recentColorsArray.unshift(selectedColor);
+        if (recentColorsArray.length > 7) {
+          recentColorsArray.pop();
+        }
+
+        user[recentColorsKey] = recentColorsArray;
+
+        await user.save();
+
+        return selectedColor;
+      };
+
+      const selectedShirtColor = await addValueFieldAndUpdateRecentColors('shirtColors', 'recentShirtColors');
+      const selectedPantColor = await addValueFieldAndUpdateRecentColors('pantColors', 'recentPantColors');
+      const selectedShoeColor = await addValueFieldAndUpdateRecentColors('shoeColors', 'recentShoeColors');
+
+      return res.status(200).json({
+        message: "Color values saved successfully",
+        selectedShirtColor,
+        selectedPantColor,
+        selectedShoeColor,
+        user,
+      });
+    } else {
+      return res.status(404).json({ message: "User not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      message: "Internal Server Error",
+      error: error.message,
+    });
+  }
+};
+
+
 export default {
   signupController,
   signinController,
@@ -653,10 +407,8 @@ export default {
   userPasswordUpadatedById,
   deleteUserAccount,
   resetPassword,
-  forgotPassword,  
-  addUserdetailsById,
-  suggestShirtColor,
-  suggestPantColor,
-  suggestShoeColor
+  forgotPassword,
+  addUserdetailsById, 
+  suggestColors
 
 };
