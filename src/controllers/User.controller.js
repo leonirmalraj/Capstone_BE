@@ -240,13 +240,61 @@ const forgotPassword = async (req, res) => {
       to: user.email,
       subject: "Password Reset",
       html: `
-        <p>Dear ${user.firstName} ${user.lastName},</p>
-        <p>We received a request to reset your password. Here is your One-Time Password (OTP): <strong>${OTP}</strong></p>
-        <p>Please click the following link to reset your password:</p>
-        <a href="https://prismatic-chimera-53966a.netlify.app/reset-password">Reset Password</a>
-        <p>If you did not make this request, please ignore this email.</p>
-        <p>Thank you</p>
-        <p>From Validation</p>
+        <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Password Reset Email</title>
+  <style>
+    /* Add your CSS styles here */
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+    }
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .header {
+      background-color: #007bff;
+      color: #fff;
+      padding: 10px;
+      text-align: center;
+      border-radius: 5px 5px 0 0;
+    }
+    .footer {
+      margin-top: 20px;
+      text-align: center;
+      font-size: 0.8em;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h2>Password Reset Request</h2>
+    </div>
+    <div class="content">
+      <p>Dear ${user.firstName} ${user.lastName},</p>
+      <p>We received a request to reset your password. Here is your One-Time Password (OTP): <strong>${OTP}</strong></p>
+      <p>Please click the following link to reset your password:</p>
+      <p><a href="https://prismatic-chimera-53966a.netlify.app/reset-password">Reset Password</a></p>
+      <p>If you did not make this request, please ignore this email.</p>
+      <p>Thank you,</p>
+      <p>From Validation</p>
+    </div>
+    <div class="footer">
+      <p>This email was sent automatically. Please do not reply.</p>
+    </div>
+  </div>
+</body>
+</html>
+
       `,
     };
 
@@ -399,7 +447,7 @@ export default {
   deleteUserAccount,
   resetPassword,
   forgotPassword,
-  addUserdetailsById, 
+  addUserdetailsById,
   suggestColors
 
 };
