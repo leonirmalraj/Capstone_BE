@@ -140,7 +140,6 @@ const deleteUserAccount = async (req, res) => {
 const signupController = async (req, res) => {
   try {
     const { firstName, lastName, email, password } = req.body;
-    console.log(firstName, lastName, email, password);
 
     if (!firstName || !lastName || !email || !password) {
       return res.status(400).json({ message: "All fields are required" });
@@ -162,7 +161,6 @@ const signupController = async (req, res) => {
     await newUser.save();
     res.status(201).json({ message: "User registered successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -200,7 +198,6 @@ const signinController = async (req, res) => {
 
     res.status(200).json({ message: "Signin successful", token, userData });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal server error" });
   }
 };
@@ -256,7 +253,6 @@ const forgotPassword = async (req, res) => {
     await transporter.sendMail(mailOptions);
     res.status(200).json({ message: "Password reset email sent successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({
       message: "Internal Server Error",
       error: error.message,
@@ -287,7 +283,6 @@ const resetPassword = async (req, res) => {
 
     res.status(200).json({ message: "Password changed successfully" });
   } catch (error) {
-    console.error(error);
     res.status(500).json({ message: "Internal Server Error" });
   }
 };
@@ -331,12 +326,9 @@ const suggestColors = async (req, res) => {
           } else if (Array.isArray(arrayString)) {
             return arrayString;
           } else {
-            console.error(`Invalid arrayString format: ${arrayString}`);
             return [];
           }
         } catch (error) {
-          console.error(`Error parsing array string: ${arrayString}`);
-          console.error(error);
           return [];
         }
       };
@@ -389,7 +381,6 @@ const suggestColors = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
   } catch (error) {
-    console.error(error);
     return res.status(500).json({
       message: "Internal Server Error",
       error: error.message,
